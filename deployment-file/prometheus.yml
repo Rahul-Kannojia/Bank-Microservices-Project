@@ -1,0 +1,28 @@
+# my global config
+global:
+  scrape_interval: 5s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 5s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+scrape_configs:
+
+  - job_name: "eurekaserver"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ["eurekaserver:9002"]
+  - job_name: "accounts"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ["accounts:9003"]
+  - job_name: "cards"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ["cards:9004"]
+  - job_name: "loans"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ["loans:9005"]
+  - job_name: "gatewayserver"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ["gatewayserver:9001"]

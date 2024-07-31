@@ -1,0 +1,136 @@
+version: '4.32.0'#Docker Version
+services:
+
+#Prometheus Properties
+  prometheus:
+    image: 'prom/prometheus:latest'
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - rahulkannojia-network
+#Grafana Properties      
+  grafana:
+    image: 'grafana/grafana:latest'
+    restart : on-failure
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    networks:
+      - rahulkannojia-network
+    depends_on:
+      - prometheus
+      
+#Zipkin Properties
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - rahulkannojia-network
+
+#Eureka Server Properties
+  eurekaserver:
+    image: 'rahulkannojia/eurekaserver:0.0.1'
+    restart : on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    ports:
+      - "9002:9002"
+    networks:
+      - rahulkannojia-network
+    environment:
+      SPRING_APPLICATION_NAME: "eurekaserver"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9002/eureka/
+
+#Accounts Microservice Properties
+  accounts:
+    image: 'rahulkannojia/accounts:0.0.1'
+    restart : on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    ports:
+      - "9003:9003"
+    networks:
+      - rahulkannojia-network
+    depends_on:
+      - eurekaserver
+      - zipkin
+    environment:
+      SPRING_APPLICATION_NAME: "accounts"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9002/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      
+#Cards Microservice Properties
+  cards:
+    image: 'rahulkannojia/cards:0.0.1'
+    restart : on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    ports:
+      - "9004:9004"
+    networks:
+      - rahulkannojia-network
+    depends_on:
+      - eurekaserver
+      - zipkin
+    environment:
+      SPRING_APPLICATION_NAME: "cards"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9002/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      
+#Loans Microservice Properties
+  loans:
+    image: 'rahulkannojia/loans:0.0.1'
+    restart : on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    ports:
+      - "9005:9005"
+    networks:
+      - rahulkannojia-network
+    depends_on:
+      - eurekaserver
+      - zipkin
+    environment:
+      SPRING_APPLICATION_NAME: "loans"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9002/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      
+#Gateway Server Microservice Properties
+  gatewayserver:
+    image: "rahulkannojia/gatewayserver:0.0.1"
+    restart : on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+    ports:
+      - "9001:9001"
+    networks:
+      - rahulkannojia-network
+    depends_on:
+      - eurekaserver
+      - cards
+      - loans
+      - accounts
+      - zipkin
+    environment:
+      SPRING_APPLICATION_NAME: "gatewayserver"
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9002/eureka/
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+
+networks:
+  rahulkannojia-network :
