@@ -1,0 +1,52 @@
+version: '4.32.0'
+services:
+
+  Elasticsearch:
+    image: elasticsearch:8.14.2
+    container_name: elasticsearch
+    restart: on-failure
+    volumes:
+      - ./elastic_data:/usr/share/elasticsearch/data/
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+      xpack.security.enabled: false
+    ports:
+      - '9200:9200'
+    networks:
+      - rahulkannojia-network
+
+  Logstash:
+    image: logstash:8.14.2
+    container_name: logstash
+    restart: on-failure
+    volumes:
+      - ../logs:/logstash_dir/logs/
+      - ./logstash/logstash.conf:/logstash_dir/logstash.conf
+    command: logstash -f /logstash_dir/logstash.conf
+    depends_on:
+      - Elasticsearch
+    ports:
+      - '9600:9600'
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - rahulkannojia-network
+
+  Kibana:
+    image: kibana:8.14.2
+    container_name: kibana
+    restart: on-failure
+    ports:
+      - '5601:5601'
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - Elasticsearch
+    networks:
+      - rahulkannojia-network
+volumes:
+  elastic_data: {}
+
+networks:
+  rahulkannojia-network:

@@ -1,0 +1,80 @@
+server:
+  port: 9003
+spring:
+  application:
+    name: accounts 
+# H2 Database connection properties
+  datasource:
+    url: jdbc:h2:mem:accountsdb
+    username: admin
+    password: admin
+# Hibernate/ JPA properties
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+# Enabling H2 console property
+  h2:
+    console:
+      enabled: true
+# Enable Circuit Breaker
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+#Circuit Breaker Properties
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+       sliding-window-size: 5
+       permitted-number-of-calls-in-half-open-state: 2
+       failure-rate-threshold: 50
+       wait-duration-in-open-state: 30s
+  
+ # Actuators Properties
+ # Enabling all Actuator endpointsmanagement: http://localhost:9003/actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+#Distributed Tracing with ZIPKIN
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0
+    
+# To enable info we have to write the property explicitly
+  info:
+    env:
+      enabled: true
+   
+# http://localhost:9003/actuator/info: we will not get any data, now we need to provide data for our application as information
+info:
+ app:
+  varsion: 0.0.1
+  description: Accounts Microservice
+ contact: 1234567895
+  
+# Eureka Client Enabling Properties
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:9002/eureka/
+# This below property for Cloud only, communication will happen internally
+  instance:
+    prefer-ip-address: true
+#Logging Pattern for Distributed tracing
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+  file:
+    name: C:/logs/accounts.log

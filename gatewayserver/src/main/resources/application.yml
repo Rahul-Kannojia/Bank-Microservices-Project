@@ -1,0 +1,58 @@
+server:
+  port: 9001
+spring:
+  application:
+    name: gatewayserver
+
+#Integrating API Gateway with Eureka Server
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+          
+ # Actuators Properties
+ # Enabling all Actuator endpointsmanagement: http://localhost:9001 /actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+#Enabling API Gateway Endpoint, Now we can see gateways routes also
+  endpoint:
+    gateway:
+      enabled: true
+
+#Distributed Tracing with ZIPKIN
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0
+    
+# To enable info we have to write the property explicitly
+  info:
+    env:
+      enabled: true
+
+# Eureka Client Enabling Properties
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:9002/eureka
+   
+# http://localhost:9001/actuator/info: we will not get any data, now we need to provide data for our application as information
+info:
+ app:
+  varsion: 0.0.1
+  description: API Gateway Microservice
+ contact: 1234567895
+
+ #Logging Pattern for Distributed tracing
+logging:
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
